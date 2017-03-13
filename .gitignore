@@ -7,3 +7,4 @@ galois.c
 galois.h
 
 *.zip
+*.class

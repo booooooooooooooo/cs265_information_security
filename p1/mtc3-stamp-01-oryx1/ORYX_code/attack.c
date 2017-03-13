@@ -64,15 +64,14 @@ void initL(unsigned char L[])
 
 }// end initL
 
-uint8_t fillAB1[4][2] = {
+uint8_t stepAB1[4][2] = {
   {0x0, 0x1},
   {0x0, 0x0},
   {0x1, 0x0},
   {0x1, 0x1}
 };
 
-uint8_t fillAB2[8][2] = {
-
+uint8_t stepAB2[8][2] = {
   {0x0, 0x0},
   {0x0, 0x1},
   {0x0, 0x2},
@@ -84,12 +83,11 @@ uint8_t fillAB2[8][2] = {
 };
 
 int isValidPost(uint8_t current, uint8_t prev){
-  if( (prev >> 1) == (current & 0x7f) ) return 1;
+  if( ((prev >> 1) & 0x7f) == (current & 0x7f) ) return 1;
   else return 0;
 }
 
-void printFillAfter1stIteration(){
-  //convert A[], B[], X[] to fills after 1st iteration and print the fills out
+void printResult(){
   unsigned fillA;
   unsigned fillB;
   unsigned fillX;
@@ -98,71 +96,142 @@ void printFillAfter1stIteration(){
   uint8_t lenfillX = 0;
   for(int i = 0; i < 25; i++){
     if(i == 0){
-      fillA = A[0];
-      fillB = B[0];
-      fillX = X[0];
+      fillA = (unsigned)A[0];
+      fillB = (unsigned)B[0];
+      fillX = (unsigned)X[0];
       lenfillA += 8;
       lenfillB += 8;
       lenfillX += 8;
     }else{
-      fillA = fillA + ( (A[i] >> 7 ) & 0x1 << (lenfillA + 1) );
-      fillX = fillX + ( (X[i] >> 7 ) & 0x1 << (lenfillX + 1) );
-      uint8_t x = ((X[i - 1] & 0x20) >> 5) & 0x1;//x is the bit in X to decide whether B steps once or twice
-      if(lenfillB < 32){
-        if(x == 0){//B shift 1
-          fillB = fillB + ( (B[i] >> 7 ) & 0x1 << (lenfillB + 1) );
-          lenfillB += 1;
-        }else{
-          fillB = fillB + ( (B[i] >> 6 ) & 0x3 << (lenfillB + 2) );
-          lenfillB += 2;
-        }
+      fillX = fillX + ( ( ( (unsigned)X[i] >> 7 ) & 0x1)  << lenfillX  );
+      lenfillX++;
+      fillA = fillA + ( ( ( (unsigned)A[i] >> 7 ) & 0x1)  << lenfillA  );
+      lenfillA++;
+      uint8_t x = ((X[i] & 0x20) >> 5) & 0x1;//x is the bit in X to decide whether B steps once or twice
+      // if(lenfillB < 32)?
+      if(x == 0){//B steps once
+        fillB = fillB + ( (((unsigned)B[i] >> 7 ) & 0x1 ) << lenfillB );
+        lenfillB += 1;
+      }else{
+        fillB = fillB + ( (((unsigned)B[i] >> 6 ) & 0x3)  << lenfillB );
+        lenfillB += 2;
       }
     }
+
   }
-  printf("%d\n", fillA);
-  printf("%d\n", fillB);
-  printf("%d\n", fillX);
+  printf("====Fills after 1st iteration\n");
+
+  printf("%x\n", fillX);
+  printf("%x\n", fillA);
+  printf("%x\n", fillB);
+
+
+  if(((X[0] & 0x20) >> 5) & 0x1){
+    int rd[16][3] = {
+      {0, 0, 0},
+      {0, 0, 1},
+      {0, 0, 2},
+      {0, 0, 3},
+      {0, 1, 0},
+      {0, 1, 1},
+      {0, 1, 2},
+      {0, 1, 3},
+      {1, 0, 0},
+      {1, 0, 1},
+      {1, 0, 2},
+      {1, 0, 3},
+      {1, 1, 0},
+      {1, 1, 1},
+      {1, 1, 2},
+      {1, 1, 3}
+    };
+    for(int i = 0; i < 16; i++){
+      printf("====Initial Fills %d\n", i);
+      printf("%x", (fillX << 1) + rd[i][0]);
+      printf("%x", (fillA << 1) + rd[i][1]);
+      printf("%x\n", (fillB << 2) + rd[i][2]);
+    }
+  }else{
+    int rd[8][3] = {
+      {0, 0, 0},
+      {0, 0, 1},
+      {0, 1, 0},
+      {0, 1, 1},
+      {1, 0, 0},
+      {1, 0, 1},
+      {1, 1, 0},
+      {1, 1, 1}
+    };
+    for(int i = 0; i < 8; i++){
+      printf("====Initial Fills %d\n", i);
+      printf("%x", (fillX << 1) + rd[i][0]);
+      printf("%x", (fillA << 1) + rd[i][1]);
+      printf("%x\n", (fillB << 1) + rd[i][2]);
+    }
+
+  }
+
+
+
 }
+
 
 void solve(uint8_t level){
   if(level == 30){
-    printFillAfter1stIteration();
+    printResult();
   }else if(level == 0){
     for(int i = 0; i < 256; i++){
       for(int j = 0; j < 256; j++){
         A[0] = i;
         B[0] = j;
-        X[0] =  keystreamByte[0]  ^ L[A[0]]  ^ L[B[0]];
+        X[0] =  keystreamByte[0]  - L[A[0]]  - L[B[0]];
+        // printf("============\n" );
+        // printf("level : %d\n", level);
+        // printf("A[level] : %x\n", A[level]);
+        // printf("B[level] : %x\n", B[level]);
+        // printf("X[level] : %x\n", X[level]);
+        // printf("keystreamByte[level] : %x\n", keystreamByte[level]);
         solve(1);
       }
     }
   }else{
-    uint8_t x = ((X[level - 1] & 0x20) >> 5) & 0x1;//x is the bit in X to decide whether B steps once or twice
+
+    // printf("============\n" );
+    // printf("level : %d\n", level);
+    // printf("A[level - 1] : %x\n", A[level - 1]);
+    // printf("B[level - 1] : %x\n", B[level - 1]);
+    // printf("X[level - 1] : %x\n", X[level - 1]);
+
+    //x steps before A and B. So use the 25 bit of X[level - 1]
+    uint8_t x = ((X[level - 1] & 0x40) >> 6) & 0x1;
     if(x == 0){//B shift 1
       for(int i = 0; i < 4; i++){
-        A[level] = A[level - 1] >> 1 + fillAB1[i][0] << 7;
-        B[level] = B[level - 1] >> 1 + fillAB1[i][1] << 7;
-        X[level] = keystreamByte[level] ^ L[A[level]] ^ L[B[level]];
+        A[level] = ((A[level - 1] >> 1) & 0x7f)+ (stepAB1[i][0] << 7);
+        B[level] = ((B[level - 1] >> 1) & 0x7f)+ (stepAB1[i][1] << 7);
+        X[level] = keystreamByte[level] - L[A[level]] - L[B[level]];
+        // printf("============\n" );
+        // printf("level : %d\n", level);
+        // printf("A[level - 1] : %x\n", A[level - 1]);
+        // printf("B[level - 1] : %x\n", B[level - 1]);
+        // printf("X[level - 1] : %x\n", X[level - 1]);
+        // printf("A[level] : %x\n", A[level]);
+        // printf("B[level] : %x\n", B[level]);
+        // printf("X[level] : %x\n", X[level]);
 
         if(isValidPost(X[level], X[level - 1])){
-
-
+        //   printf("============\n" );
+        //  printf("level : %d\n", level);
+        //   printf("X[level - 1] : %x\n", X[level - 1]);
+        //   printf("X[level] : %x\n", X[level]);
           solve(level + 1);
         }
       }
     }else{// B shift 2
-
-
       for(int i = 0; i < 8; i++){
-        A[level] = A[level - 1] >> 1 + fillAB2[i][0] << 7;
-        B[level] = B[level - 1] >> 2 + fillAB2[i][1] << 6;
-        X[level] = keystreamByte[level] ^ L[A[level]] ^ L[B[level]];
-printf("hahaha\n" );
-printf("level : %d\n", level);
-printf("%d\n",X[level] );
-printf("%d\n", X[level - 1]);
+        A[level] = ((A[level - 1] >> 1) & 0x7f) + (stepAB2[i][0] << 7);
+        B[level] = ((B[level - 1] >> 2) & 0x3f) + (stepAB2[i][1] << 6);
+        X[level] = keystreamByte[level] - L[A[level]] - L[B[level]];
         if(isValidPost(X[level], X[level - 1])){
-
           solve(level + 1);
         }
       }
@@ -171,6 +240,7 @@ printf("%d\n", X[level - 1]);
 }
 
 int main(int argc, char const *argv[]) {
+  initL(L);
   solve(0);
   return 0;
 }

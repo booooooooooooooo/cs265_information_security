@@ -1,5 +1,9 @@
-*.class
-.gitignore
 *.pdf
+
 *.txt
+.DS_Store
 a.out
+galois.c
+galois.h
+
+*.zip

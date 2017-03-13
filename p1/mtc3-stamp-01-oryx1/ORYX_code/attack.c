@@ -108,6 +108,7 @@ void printResult(){
       fillA = fillA + ( ( ( (unsigned)A[i] >> 7 ) & 0x1)  << lenfillA  );
       lenfillA++;
       uint8_t x = ((X[i] & 0x20) >> 5) & 0x1;//x is the bit in X to decide whether B steps once or twice
+      // uint8_t x = ((X[i - 1] & 0x40) >> 6) & 0x1;
       // if(lenfillB < 32)?
       if(x == 0){//B steps once
         fillB = fillB + ( (((unsigned)B[i] >> 7 ) & 0x1 ) << lenfillB );

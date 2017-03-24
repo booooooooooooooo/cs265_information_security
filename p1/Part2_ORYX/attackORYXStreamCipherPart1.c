@@ -1,3 +1,8 @@
+/*
+Note:
+void initL(unsigned char L[]) is copied from the code provided by author of problem "ORYX Stream Cipher Part I"
+*/
+
 #include<stdio.h>
 #include <stdint.h>
 
@@ -187,23 +192,10 @@ void solve(uint8_t level){
         A[0] = i;
         B[0] = j;
         X[0] =  keystreamByte[0]  - L[A[0]]  - L[B[0]];
-        // printf("============\n" );
-        // printf("level : %d\n", level);
-        // printf("A[level] : %x\n", A[level]);
-        // printf("B[level] : %x\n", B[level]);
-        // printf("X[level] : %x\n", X[level]);
-        // printf("keystreamByte[level] : %x\n", keystreamByte[level]);
         solve(1);
       }
     }
   }else{
-
-    // printf("============\n" );
-    // printf("level : %d\n", level);
-    // printf("A[level - 1] : %x\n", A[level - 1]);
-    // printf("B[level - 1] : %x\n", B[level - 1]);
-    // printf("X[level - 1] : %x\n", X[level - 1]);
-
     //x steps before A and B. So use the 25 bit of X[level - 1]
     uint8_t x = ((X[level - 1] & 0x40) >> 6) & 0x1;
     if(x == 0){//B shift 1
@@ -211,20 +203,8 @@ void solve(uint8_t level){
         A[level] = ((A[level - 1] >> 1) & 0x7f)+ (stepAB1[i][0] << 7);
         B[level] = ((B[level - 1] >> 1) & 0x7f)+ (stepAB1[i][1] << 7);
         X[level] = keystreamByte[level] - L[A[level]] - L[B[level]];
-        // printf("============\n" );
-        // printf("level : %d\n", level);
-        // printf("A[level - 1] : %x\n", A[level - 1]);
-        // printf("B[level - 1] : %x\n", B[level - 1]);
-        // printf("X[level - 1] : %x\n", X[level - 1]);
-        // printf("A[level] : %x\n", A[level]);
-        // printf("B[level] : %x\n", B[level]);
-        // printf("X[level] : %x\n", X[level]);
 
         if(isValidPost(X[level], X[level - 1])){
-        //   printf("============\n" );
-        //  printf("level : %d\n", level);
-        //   printf("X[level - 1] : %x\n", X[level - 1]);
-        //   printf("X[level] : %x\n", X[level]);
           solve(level + 1);
         }
       }
